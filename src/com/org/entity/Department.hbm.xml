@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE hibernate-mapping PUBLIC   
+            "-//Hibernate/Hibernate Mapping DTD 3.0//EN"  
+            "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+	<class name="com.org.entity.Department" table="department">
+		<id name="did" column="did">
+			<generator class="native" />
+		</id>
+		<property name="dname" column="dname" length="20"></property>
+		<property name="ddesc" column="ddesc" length="20"></property>
+		<!--一个部门中有多个员工 -->
+		<set name="employees">
+			<!-- 指定需要关联的列 -->
+			<key>
+				<column name="eno"></column>
+			</key>
+			<!--需要关联的表(类) -->
+			<one-to-many class="com.org.entity.Employee" />
+		</set>
+	</class>
+</hibernate-mapping>  

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<beans xmlns="http://www.springframework.org/schema/beans"  
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"  
+    xmlns:tx="http://www.springframework.org/schema/tx" xmlns:context="http://www.springframework.org/schema/context"  
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd  
+        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd  
+        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd  
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd">  
+
+	<!-- 引入属性文件 -->
+	<context:property-placeholder location="classpath:jdbc.properties" />
+
+	<!-- 配置c3p0 连接池 -->
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"
+		>
+		<property name="driverClass" value="${jdbc.driverClassName}" />
+		<property name="jdbcUrl" value="${jdbc.url}" />
+		<property name="user" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+		<property name="autoCommitOnClose" value="true" />
+		<property name="checkoutTimeout" value="${cpool.checkoutTimeout}" />
+		<property name="initialPoolSize" value="${cpool.minPoolSize}" />
+		<property name="minPoolSize" value="${cpool.minPoolSize}" />
+		<property name="maxPoolSize" value="${cpool.maxPoolSize}" />
+		<property name="maxIdleTime" value="${cpool.maxIdleTime}" />
+		<property name="acquireIncrement" value="${cpool.acquireIncrement}" />
+		<property name="maxIdleTimeExcessConnections" value="${cpool.maxIdleTimeExcessConnections}" />
+	</bean>
+
+
+	<!-- 配置hibernate 相关属性 -->
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
+		<!-- 注入连接池 -->
+		<property name="dataSource" ref="dataSource"></property>
+		<!-- hibernate 的相关属性 -->
+		<property name="hibernateProperties">
+			<props>
+				<!--是否在后台显示Hibernate用到的SQL语句，开发时设置为true，便于差错， 程序运行时可以在Eclipse的控制台显示Hibernate的执行Sql语句。项目部署后可以设置为false，提高运行效率 -->
+				<prop key="hibernate.show_sql">true</prop>
+				<!--hibernate.dialect 只是Hibernate使用的数据库方言,就是要用Hibernate连接那种类型的数据库服务器。 -->
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+				<!--输出格式化后的sql,更方便查看 -->
+				<prop key="hibernate.format_sql">true </prop>
+				<!-- 它包含4个属性: * create : 会根据你的model类来生成表,但是每次运行都会删除上一次的表,重新生成表,哪怕2次没有任何改变 
+					* create-drop : 根据model类生成表,但是sessionFactory一关闭,表就自动删除 * update : 最常用的属性，也根据model类生成表,即使表结构改变了,表中的行仍然存在,不会删除以前的行 
+					* validate : 只会和数据库中的表进行比较,不会创建新表,但是会插入新值 -->
+				<prop key="hibernate.hbm2ddl.auto">update</prop>
+			</props>
+		</property>
+		<!-- hibernate 映射文件 -->
+		<property name="mappingResources">
+			<list>
+				<value>com/org/entity/Department.hbm.xml</value>
+				<value>com/org/entity/Employee.hbm.xml</value>
+				
+			</list>
+		</property>
+	</bean>
+
+	<!-- 配置Action 的类 -->
+	<bean id="employeeAction" class="com.org.action.EmployeeAction"
+		scope="prototype">
+		<!-- 手动注入service -->
+		<property name="employeeService" ref="employeeService"></property>
+	</bean>
+	<!-- 配置业务层的类 -->
+	<bean id="employeeService" class="com.org.service.impl.EmlpoyeeServiceImpl">
+		<!-- 注入dao -->
+		<property name="employeeDao" ref="employeeDao" />
+	</bean>
+
+	<!-- 配置dao的类 -->
+	<bean id="employeeDao" class="com.org.dao.impl.EmployeeDaoImpl">
+		<!--注入 sessionFactoryBean -->
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	
+	
+		<!-- 配置Action 的类 -->
+	<bean id="departmentAction" class="com.org.action.DepartmentAction"
+		scope="prototype">
+		<!-- 手动注入service -->
+		<property name="departmentservice" ref="departmentservice"></property>
+	</bean>
+	<!-- 配置业务层的类 -->
+	<bean id="departmentservice" class="com.org.service.impl.DepartmentServiceImpl">
+		<!-- 注入dao -->
+		<property name="departmentDao" ref="departmentDao" />
+	</bean>
+
+	<!-- 配置dao的类 -->
+	<bean id="departmentDao" class="com.org.dao.impl.DepartmentDaoImpl">
+		<!--注入 sessionFactoryBean -->
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+
+	<!-- 配置事务管理器 -->
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	<!-- 开启事务注解 -->
+	<tx:annotation-driven transaction-manager="transactionManager" />
+
+</beans>  
